@@ -1,135 +1,84 @@
-import { motion } from "framer-motion";
-import { TaskItem } from "../TaskItem";
 import useTask from "../../hooks/useTask";
-import { useState } from "react";
+import {
+	DragDropContext,
+	DragStart,
+	DraggableLocation,
+	DropResult,
+	Droppable,
+} from "react-beautiful-dnd";
+import { Column } from "../Column";
+import { useCallback, useState } from "react";
 
 export const KanbanBoard: React.FC = () => {
-	const { Titles, ToDo, InProgress, Completed } = useTask();
+	const { Columns, ToDo, InProgress, Completed } = useTask();
 
-	const [firstcolname, setFirstColName] = useState<string>("To Do");
-	const [showEdit, setShowEdit] = useState<boolean>(false);
+	const [columns, setColumns] = useState(Columns);
 
-	
-	// const [secondcolname, setSecondColName] = useState<string>("In Progress");
-	// const [showEdit, setShowEdit] = useState<boolean>(false);
+	const [tasks, setTasks] = useState([...ToDo, ...InProgress, ...Completed]);
 
-	
-	// const [thirdtcolname, setThirdColName] = useState<string>("Completed");
-	// const [showEdit, setShowEdit] = useState<boolean>(false);
+	const onItemMoveEnd = useCallback(
+		(result: DropResult) => {
+			console.log("drag stopped");
+			const { destination, source } = result;
+			console.log("End Column:", destination?.droppableId);
+			console.log("End Position in list:", destination?.index);
+
+			if (!destination) {
+				return; // Item was dropped outside of a droppable area
+			}
+			if (
+				destination.droppableId === source.droppableId &&
+				destination.index === source.index
+			) {
+				console.log("same");
+			}
+
+			console.log(source);
+			console.log(destination);
+		},
+		[columns, setColumns]
+	);
+
+	const onItemMoveStart = useCallback((start: DragStart) => {
+		console.log("drag started");
+		const { draggableId, source } = start;
+		console.log("Draggable name:", draggableId);
+		console.log("Start position in list:", source.index);
+		console.log("Column start:", source.droppableId);
+	}, []);
 
 	return (
-		<div className=" flex justify-center bg-slate-300 rounded-lg p-4 space-x-4">
-			<motion.div
-				className="bg-gray-100 rounded-lg p-4 m- w-80 space-y-5"
-				initial="initial"
-				animate="animate"
-				variants={{
-					animate: {
-						transition: {
-							staggerChildren: 0.1,
-						},
-					},
-				}}
+		<DragDropContext
+			onDragStart={onItemMoveStart}
+			onDragEnd={onItemMoveEnd}
+		>
+			<Droppable
+				droppableId="columns"
+				direction="horizontal"
+				type="column"
 			>
-				{showEdit ? (
-					<div className=" flex space-x-2 items-center justify-center">
-						<input
-							className="bg-inherit border-2 border-black"
-							type="text"
-							value={firstcolname}
-							onChange={(e) => setFirstColName(e.target.value)}
-						/>
-						<button
-							className="border-2 border-black rounded-lg  w-12"
-							onClick={() => setShowEdit(false)}
-						>
-							Save
-						</button>
-					</div>
-				) : (
-					<div className="flex justify-center items-center space-x-4">
-						<p className="text-lg font-medium ">{firstcolname}</p>
-						<button
-							className="border-2 border-black rounded-lg px-1"
-							onClick={() => setShowEdit(true)}
-						>
-							Edit
-						</button>
+				{(provided, snapshot) => (
+					<div
+						ref={provided.innerRef}
+						{...provided.droppableProps}
+						className=" flex justify-center bg-slate-300 rounded-lg p-4 space-x-4"
+					>
+						{columns.map((column, index) => (
+							<Column
+								key={index}
+								title={column.name}
+								tasks={column.taskId.map((taskId) =>
+									tasks.find((task) => task.id === taskId)
+								)}
+								id={column.id}
+							/>
+						))}
+					
+						{provided.placeholder}
 					</div>
 				)}
-
-				{ToDo.map((task, index) => (
-					<TaskItem
-						key={index}
-						initial={{
-							y: "200%",
-							opacity: 0,
-						}}
-						animate={{
-							y: 0,
-							opacity: 1,
-						}}
-						task={task}
-					/>
-				))}
-			</motion.div>
-			<motion.div
-				className="bg-gray-100 rounded-lg p-4 m- w-80 space-y-5"
-				initial="initial"
-				animate="animate"
-				variants={{
-					animate: {
-						transition: {
-							staggerChildren: 0.1,
-						},
-					},
-				}}
-			>
-				<p className="text-lg font-medium mb-4">In Progress</p>
-				{InProgress.map((task, index) => (
-					<TaskItem
-						key={index}
-						initial={{
-							y: "200%",
-							opacity: 0,
-						}}
-						animate={{
-							y: 0,
-							opacity: 1,
-						}}
-						task={task}
-					/>
-				))}
-			</motion.div>
-			<motion.div
-				className="bg-gray-100 rounded-lg p-4 m- w-80 space-y-5"
-				initial="initial"
-				animate="animate"
-				variants={{
-					animate: {
-						transition: {
-							staggerChildren: 0.1,
-						},
-					},
-				}}
-			>
-				<p className="text-lg font-medium mb-4">Completed</p>
-				{Completed.map((task, index) => (
-					<TaskItem
-						key={index}
-						initial={{
-							y: "200%",
-							opacity: 0,
-						}}
-						animate={{
-							y: 0,
-							opacity: 1,
-						}}
-						task={task}
-					/>
-				))}
-			</motion.div>
-		</div>
+			</Droppable>
+		</DragDropContext>
 	);
 };
 
