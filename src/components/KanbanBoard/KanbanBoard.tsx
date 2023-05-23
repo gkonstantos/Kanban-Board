@@ -2,51 +2,67 @@ import useTask from "../../hooks/useTask";
 import {
 	DragDropContext,
 	DragStart,
-	DraggableLocation,
 	DropResult,
 	Droppable,
 } from "react-beautiful-dnd";
 import { Column } from "../Column";
 import { useCallback, useState } from "react";
+import { TaskType } from "../../context/TaskContext/context";
 
 export const KanbanBoard: React.FC = () => {
 	const { Columns, ToDo, InProgress, Completed } = useTask();
 
-	const [columns, setColumns] = useState(Columns);
+	const [tasks, setTasks] = useState<Array<TaskType>>([
+		...ToDo,
+		...InProgress,
+		...Completed,
+	]);
 
-	const [tasks, setTasks] = useState([...ToDo, ...InProgress, ...Completed]);
+	const [dragStartDetails, setDragStartDetails] = useState<any>(null);
+	const [dragEndDetails, setDragEndDetails] = useState<any>(null);
 
 	const onItemMoveEnd = useCallback(
 		(result: DropResult) => {
-			console.log("drag stopped");
 			const { destination, source } = result;
-			console.log("End Column:", destination?.droppableId);
-			console.log("End Position in list:", destination?.index);
+			const payload = {
+				stopped: true,
+				destinationColumn: destination?.droppableId,
+				destinationPosition: destination?.index,
+			};
 
 			if (!destination) {
-				return; // Item was dropped outside of a droppable area
+				return;
 			}
 			if (
 				destination.droppableId === source.droppableId &&
 				destination.index === source.index
 			) {
 				console.log("same");
+				return;
 			}
 
-			console.log(source);
-			console.log(destination);
+			setDragEndDetails(payload);
 		},
-		[columns, setColumns]
+		[setDragEndDetails]
 	);
 
-	const onItemMoveStart = useCallback((start: DragStart) => {
-		console.log("drag started");
-		const { draggableId, source } = start;
-		console.log("Draggable name:", draggableId);
-		console.log("Start position in list:", source.index);
-		console.log("Column start:", source.droppableId);
-	}, []);
+	const onItemMoveStart = useCallback(
+		(start: DragStart) => {
+			const { draggableId, source } = start;
+			const payload = {
+				stopped: false,
+				draggableName: draggableId,
+				StartPosition: source.index,
+				startColumn: source.droppableId,
+			};
 
+			setDragStartDetails(payload);
+		},
+		[setDragStartDetails]
+	);
+
+	console.log(dragStartDetails);
+	console.log(dragEndDetails);
 	return (
 		<DragDropContext
 			onDragStart={onItemMoveStart}
@@ -57,13 +73,13 @@ export const KanbanBoard: React.FC = () => {
 				direction="horizontal"
 				type="column"
 			>
-				{(provided, snapshot) => (
+				{(provided) => (
 					<div
 						ref={provided.innerRef}
 						{...provided.droppableProps}
 						className=" flex justify-center bg-slate-300 rounded-lg p-4 space-x-4"
 					>
-						{columns.map((column, index) => (
+						{Columns.map((column, index) => (
 							<Column
 								key={index}
 								title={column.name}
@@ -73,7 +89,7 @@ export const KanbanBoard: React.FC = () => {
 								id={column.id}
 							/>
 						))}
-					
+
 						{provided.placeholder}
 					</div>
 				)}

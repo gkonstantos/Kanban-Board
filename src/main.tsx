@@ -19,7 +19,6 @@ const onRender: ProfilerOnRenderCallback = (
 };
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-	// <React.StrictMode>
 
 	<Profiler id="App" onRender={onRender}>
 		<App />

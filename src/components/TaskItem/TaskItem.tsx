@@ -1,6 +1,5 @@
 import clsx from "clsx";
-import { Variant, motion } from "framer-motion";
-import { ChangeEvent, useState } from "react";
+import { useState } from "react";
 import { Draggable } from "react-beautiful-dnd";
 import { TaskType } from "../../context/TaskContext/context";
 
@@ -15,13 +14,9 @@ export const TaskItem: React.FC<TaskItemProps> = (props) => {
 	const [name, setName] = useState<string>(task?.name ?? "");
 	const [showEdit, setShowEdit] = useState<boolean>(false);
 
-	const handleItemMoveStart = () => {
-		console.log("task dragged!");
-	};
-
 	return (
 		<Draggable draggableId={task ? task.name : "1"} index={index}>
-			{(provided, snapshot) => (
+			{(provided) => (
 				<div
 					ref={provided.innerRef}
 					{...provided.draggableProps}

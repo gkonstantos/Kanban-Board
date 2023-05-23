@@ -1,8 +1,6 @@
-import { motion } from "framer-motion";
 import { useState } from "react";
 import TaskItem from "../TaskItem";
 import { Draggable, Droppable } from "react-beautiful-dnd";
-import { TaskType } from "../../context/TaskContext/context";
 
 type ColumnProps = {
 	title: string;
@@ -15,11 +13,10 @@ export const Column: React.FC<ColumnProps> = (props) => {
 
 	const [Colname, setColName] = useState<string>(title);
 	const [showEdit, setShowEdit] = useState<boolean>(false);
-	// console.log(tasks);
-	// console.log(id)
+
 	return (
 		<Draggable draggableId={title} index={id}>
-			{(provided, snapshot) => (
+			{(provided) => (
 				<div
 					ref={provided.innerRef}
 					{...provided.draggableProps}
@@ -54,7 +51,7 @@ export const Column: React.FC<ColumnProps> = (props) => {
 					)}
 
 					<Droppable droppableId={title}>
-						{(provided, snapshot) => (
+						{(provided) => (
 							<div
 								ref={provided.innerRef}
 								{...provided.droppableProps}
