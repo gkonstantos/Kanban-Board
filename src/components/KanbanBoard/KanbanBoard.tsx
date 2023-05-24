@@ -7,23 +7,19 @@ import {
 } from "react-beautiful-dnd";
 import { Column } from "../Column";
 import { useCallback, useState } from "react";
-import { TaskType } from "../../context/TaskContext/context";
+import { signal } from "@preact/signals";
 
 export const KanbanBoard: React.FC = () => {
-	const { Columns, ToDo, InProgress, Completed } = useTask();
+	const { Columns, Tasks } = useTask();
 
-	const [tasks, setTasks] = useState<Array<TaskType>>([
-		...ToDo,
-		...InProgress,
-		...Completed,
-	]);
+	const item = signal("");
 
 	const [dragStartDetails, setDragStartDetails] = useState<any>(null);
 	const [dragEndDetails, setDragEndDetails] = useState<any>(null);
 
 	const onItemMoveEnd = useCallback(
 		(result: DropResult) => {
-			const { destination, source } = result;
+			const { destination, source, draggableId } = result;
 			const payload = {
 				stopped: true,
 				destinationColumn: destination?.droppableId,
@@ -40,10 +36,37 @@ export const KanbanBoard: React.FC = () => {
 				console.log("same");
 				return;
 			}
+			item.value = draggableId;
+
+			const removedTask = Columns.value.map((column) => {
+				if (column.taskId.includes(item.value)) {
+					return {
+						...column,
+						taskId: column.taskId.filter(
+							(taskId) => taskId !== item.value
+						),
+					};
+				}
+				return column;
+			});
+
+			Columns.value = removedTask;
+
+			const updatedColumns = Columns.value.map((column) => {
+				if (column.name === destination.droppableId) {
+					return {
+						...column,
+						taskId: [...column.taskId, item.value],
+					};
+				}
+				return column;
+			});
+
+			Columns.value = updatedColumns;
 
 			setDragEndDetails(payload);
 		},
-		[setDragEndDetails]
+		[Columns, item]
 	);
 
 	const onItemMoveStart = useCallback(
@@ -63,6 +86,9 @@ export const KanbanBoard: React.FC = () => {
 
 	console.log(dragStartDetails);
 	console.log(dragEndDetails);
+	console.log(Columns.value);
+	// console.log(Tasks.value)
+
 	return (
 		<DragDropContext
 			onDragStart={onItemMoveStart}
@@ -79,12 +105,14 @@ export const KanbanBoard: React.FC = () => {
 						{...provided.droppableProps}
 						className=" flex justify-center bg-slate-300 rounded-lg p-4 space-x-4"
 					>
-						{Columns.map((column, index) => (
+						{Columns.value?.map((column, index) => (
 							<Column
 								key={index}
 								title={column.name}
-								tasks={column.taskId.map((taskId) =>
-									tasks.find((task) => task.id === taskId)
+								tasks={column.taskId?.map((taskId) =>
+									[...Tasks.value].find(
+										(task) => task.id === taskId
+									)
 								)}
 								id={column.id}
 							/>

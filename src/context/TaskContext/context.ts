@@ -1,3 +1,4 @@
+import { Signal } from '@preact/signals';
 import { createContext } from 'react';
 
 export type ColumnType = {
@@ -13,10 +14,8 @@ export type TaskType = {
 }
 
 export type TaskContextValues = {
-	Columns:Array<ColumnType>;
-	ToDo: Array<TaskType>;
-	InProgress: Array<TaskType>;
-	Completed: Array<TaskType>;
+	Columns:Signal<Array<ColumnType>>;
+	Tasks:Signal<Array<TaskType>>;
 };
 
 

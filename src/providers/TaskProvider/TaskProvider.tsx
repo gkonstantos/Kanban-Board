@@ -1,10 +1,5 @@
 import { TaskContext } from "../../context/TaskContext";
-import {
-	Columns,
-	MockToDo,
-	MockInProgress,
-	MockCompleted,
-} from "../../data/MockData";
+import { Columns, MockTasks } from "../../data/MockData";
 
 export const TaskProvider: React.FC<React.PropsWithChildren> = ({
 	children,
@@ -13,9 +8,7 @@ export const TaskProvider: React.FC<React.PropsWithChildren> = ({
 		<TaskContext.Provider
 			value={{
 				Columns: Columns,
-				ToDo: MockToDo,
-				InProgress: MockInProgress,
-				Completed: MockCompleted,
+				Tasks: MockTasks,
 			}}
 		>
 			{children}
