@@ -5,11 +5,11 @@ import { Draggable, Droppable } from "react-beautiful-dnd";
 type ColumnProps = {
 	title: string;
 	tasks: Array<any>;
-	id?: number;
+	id: number;
 };
 
 export const Column: React.FC<ColumnProps> = (props) => {
-	const { title, tasks, id = 1 } = props;
+	const { title, tasks, id } = props;
 
 	return (
 		<Draggable draggableId={title} index={id}>
@@ -22,7 +22,7 @@ export const Column: React.FC<ColumnProps> = (props) => {
 				>
 					<p className="text-lg font-medium ">{title}</p>
 
-					<Droppable droppableId={title}>
+					<Droppable droppableId={title} type="item">
 						{(provided) => (
 							<div
 								ref={provided.innerRef}
