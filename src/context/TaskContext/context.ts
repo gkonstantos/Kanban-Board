@@ -14,9 +14,7 @@ export type TaskType = {
 
 export type TaskContextValues = {
 	Columns:Array<ColumnType>;
-	ToDo: Array<TaskType>;
-	InProgress: Array<TaskType>;
-	Completed: Array<TaskType>;
+	Tasks:Array<TaskType>;
 };
 
 
