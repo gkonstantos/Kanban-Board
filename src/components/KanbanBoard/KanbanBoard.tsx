@@ -7,70 +7,81 @@ import {
 } from "react-beautiful-dnd";
 import { Column } from "../Column";
 import { useCallback, useState } from "react";
-import { ColumnType, TaskType } from "../../context/TaskContext/context";
+import { ColumnType } from "../../context/TaskContext/context";
 
 export const KanbanBoard: React.FC = () => {
 	const { Columns, Tasks } = useTask();
 
-	const [tasks, setTasks] = useState<Array<TaskType>>([...Tasks]);
 	const [columns, setColumns] = useState<Array<ColumnType>>([...Columns]);
 
 	const [dragStartDetails, setDragStartDetails] = useState<any>(null);
 	const [dragEndDetails, setDragEndDetails] = useState<any>(null);
 
-	const onItemMoveEnd = useCallback((result: DropResult) => {
-		const { destination, source, draggableId, type } = result;
-		const payload = {
-			stopped: true,
-			destinationColumn: destination?.droppableId,
-			destinationPosition: destination?.index,
-		};
+	const onItemMoveEnd = useCallback(
+		(result: DropResult) => {
+			const { destination, source, draggableId, type } = result;
+			const payload = {
+				stopped: true,
+				destinationColumn: destination?.droppableId,
+				destinationPosition: destination?.index,
+			};
 
-		if (!destination) {
-			return;
-		}
-		if (
-			destination.droppableId === source.droppableId &&
-			destination.index === source.index
-		) {
-			console.log("same");
-			return;
-		}
+			if (!destination) {
+				return;
+			}
+			if (
+				destination.droppableId === source.droppableId &&
+				destination.index === source.index
+			) {
+				console.log("same");
+				return;
+			}
 
-		//TODO: Fix column movement.
-
-	
-		setColumns((prevColumns) => {
-			const removedTask = prevColumns.map((column) => {
-				if (column.taskId.includes(draggableId)) {
-					return {
-						...column,
-						taskId: column.taskId.filter(
-							(taskId) => taskId !== draggableId
-						),
-					};
+			if (type === "column") {
+				if (source.index !== destination.index) {
+					const updatedColumns = Array.from(columns);
+					const movedColumn = updatedColumns[source.index];
+					updatedColumns.splice(source.index, 1);
+					updatedColumns.splice(destination.index, 0, movedColumn);
+					setColumns(updatedColumns);
 				}
-				return column;
+
+				return;
+			}
+
+			setColumns((prevColumns) => {
+				const removedTask = prevColumns.map((column) => {
+					if (column.taskId.includes(draggableId)) {
+						return {
+							...column,
+							taskId: column.taskId.filter(
+								(taskId) => taskId !== draggableId
+							),
+						};
+					}
+					return column;
+				});
+
+				const updatedColumns = removedTask.map((column) => {
+					if (column.name === destination.droppableId) {
+						const newTaskId = [...column.taskId];
+						newTaskId.splice(destination.index, 0, draggableId);
+
+						return {
+							...column,
+							taskId: newTaskId,
+						};
+					}
+					return column;
+				});
+
+				return updatedColumns;
 			});
 
-			const updatedColumns = removedTask.map((column) => {
-				if (column.name === destination.droppableId) {
-					const newTaskId = [...column.taskId];
-					newTaskId.splice(destination.index, 0, draggableId);
-
-					return {
-						...column,
-						taskId: newTaskId,
-					};
-				}
-				return column;
-			});
-
-			return updatedColumns;
-		});
-
-		setDragEndDetails(payload);
-	}, []);
+			setDragEndDetails(payload);
+		},
+		[columns]
+	);
 
 	const onItemMoveStart = useCallback(
 		(start: DragStart) => {
@@ -111,7 +122,7 @@ export const KanbanBoard: React.FC = () => {
 								key={column.id}
 								title={column.name}
 								tasks={column.taskId.map((taskId) =>
-									tasks.find((task) => task.id === taskId)
+									Tasks.find((task) => task.id === taskId)
 								)}
 								id={index}
 							/>
