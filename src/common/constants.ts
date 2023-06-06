@@ -1,0 +1,6 @@
+export const enum EventTypes {
+    ITEM_MOVE_START = "ITEM_MOVE_START",
+    ITEM_MOVE_END = "ITEM_MOVE_END",
+    UPDATE_COLUMNS = "UPDATE_COLUMNS",
+    ITEM_MOVE= "ITEM_MOVE",
+}

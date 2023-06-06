@@ -8,14 +8,14 @@ import {
 import { Column } from "../Column";
 import { useCallback, useState } from "react";
 import { ColumnType } from "../../context/TaskContext/context";
+import PubSub from "pubsub-js";
+import { EventTypes } from "../../common";
 
 export const KanbanBoard: React.FC = () => {
 	const { Columns, Tasks } = useTask();
-
 	const [columns, setColumns] = useState<Array<ColumnType>>([...Columns]);
 
-	const [dragStartDetails, setDragStartDetails] = useState<any>(null);
-	const [dragEndDetails, setDragEndDetails] = useState<any>(null);
+	// Publish here an event type, subscribe in the provider that listens for this event type and update the state accordingly.
 
 	const onItemMoveEnd = useCallback(
 		(result: DropResult) => {
@@ -38,69 +38,38 @@ export const KanbanBoard: React.FC = () => {
 			}
 
 			if (type === "column") {
-				if (source.index !== destination.index) {
-					const updatedColumns = Array.from(columns);
-					const movedColumn = updatedColumns[source.index];
-					updatedColumns.splice(source.index, 1);
-					updatedColumns.splice(destination.index, 0, movedColumn);
-					setColumns(updatedColumns);
-				}
-
+				PubSub.publish(EventTypes.UPDATE_COLUMNS, {
+					source,
+					destination,
+					columns,
+					setColumns,
+				});
 				return;
 			}
 
-			setColumns((prevColumns) => {
-				const removedTask = prevColumns.map((column) => {
-					if (column.taskId.includes(draggableId)) {
-						return {
-							...column,
-							taskId: column.taskId.filter(
-								(taskId) => taskId !== draggableId
-							),
-						};
-					}
-					return column;
-				});
-
-				const updatedColumns = removedTask.map((column) => {
-					if (column.name === destination.droppableId) {
-						const newTaskId = [...column.taskId];
-						newTaskId.splice(destination.index, 0, draggableId);
-
-						return {
-							...column,
-							taskId: newTaskId,
-						};
-					}
-					return column;
-				});
-
-				return updatedColumns;
+			PubSub.publish(EventTypes.ITEM_MOVE, {
+				draggableId,
+				destination,
+				setColumns,
 			});
 
-			setDragEndDetails(payload);
+			PubSub.publish(EventTypes.ITEM_MOVE_END, payload);
 		},
 		[columns]
 	);
 
-	const onItemMoveStart = useCallback(
-		(start: DragStart) => {
-			const { draggableId, source, type } = start;
-			const payload = {
-				type: type,
-				stopped: false,
-				draggableName: draggableId,
-				StartPosition: source.index,
-				startColumn: source.droppableId,
-			};
+	const onItemMoveStart = useCallback((start: DragStart) => {
+		const { draggableId, source, type } = start;
+		const payload = {
+			type: type,
+			stopped: false,
+			draggableName: draggableId,
+			StartPosition: source.index,
+			startColumn: source.droppableId,
+		};
+		PubSub.publish(EventTypes.ITEM_MOVE_START, payload);
+	}, []);
 
-			setDragStartDetails(payload);
-		},
-		[setDragStartDetails]
-	);
-
-	console.log(dragStartDetails);
-	console.log(dragEndDetails);
 	return (
 		<DragDropContext
 			onDragStart={onItemMoveStart}

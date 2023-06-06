@@ -12,11 +12,14 @@
   "dependencies": {
     "clsx": "^1.2.1",
     "framer-motion": "^10.12.9",
+    "mitt": "^3.0.0",
+    "pubsub-js": "^1.9.4",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@types/pubsub-js": "^1.8.3",
     "@types/react": "^18.0.28",
     "@types/react-beautiful-dnd": "^13.1.4",
     "@types/react-dom": "^18.0.11",
