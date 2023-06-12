@@ -1,14 +1,20 @@
+import { useRef } from "react";
 import TaskItem from "../TaskItem";
 import { Draggable, Droppable } from "react-beautiful-dnd";
+import React from "react";
+import { TaskType } from "../../context/TaskContext/context";
 
 type ColumnProps = {
 	title: string;
-	tasks: Array<any>;
+	tasks: Array<TaskType>;
 	id: number;
 };
 
-export const Column: React.FC<ColumnProps> = (props) => {
+export const Column: React.FC<ColumnProps> = React.memo((props) => {
+	
 	const { title, tasks, id } = props;
+	const renderCounter  = useRef(0);
+    renderCounter.current = renderCounter.current + 1;
 
 	return (
 		<Draggable draggableId={title} index={id}>
@@ -19,7 +25,7 @@ export const Column: React.FC<ColumnProps> = (props) => {
 					{...provided.dragHandleProps}
 					className="bg-gray-100 rounded-lg p-4 m- w-80 space-y-5"
 				>
-					<p className="text-lg font-medium ">{title}</p>
+					<p className="text-lg font-medium ">{title} render:{renderCounter.current}</p>
 
 					<Droppable droppableId={title} type="item">
 						{(provided) => (
@@ -42,5 +48,5 @@ export const Column: React.FC<ColumnProps> = (props) => {
 			)}
 		</Draggable>
 	);
-};
+});
 export default Column;

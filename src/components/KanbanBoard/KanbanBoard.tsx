@@ -6,101 +6,22 @@ import {
 	Droppable,
 } from "react-beautiful-dnd";
 import { Column } from "../Column";
-import { useCallback, useState } from "react";
-import { ColumnType } from "../../context/TaskContext/context";
+import { ColumnType, TaskType } from "../../context/TaskContext/context";
+import React, { useRef } from "react";
 
-export const KanbanBoard: React.FC = () => {
-	const { Columns, Tasks } = useTask();
+type KanbanBoardType = {
+	onItemMoveStart: (start: DragStart) => void;
+	onItemMoveEnd: (result: DropResult) => void;
+	columns: ColumnType[];
+};
 
-	const [columns, setColumns] = useState<Array<ColumnType>>([...Columns]);
-
-	const [dragStartDetails, setDragStartDetails] = useState<any>(null);
-	const [dragEndDetails, setDragEndDetails] = useState<any>(null);
-
-	const onItemMoveEnd = useCallback(
-		(result: DropResult) => {
-			const { destination, source, draggableId, type } = result;
-			const payload = {
-				stopped: true,
-				destinationColumn: destination?.droppableId,
-				destinationPosition: destination?.index,
-			};
-
-			if (!destination) {
-				return;
-			}
-			if (
-				destination.droppableId === source.droppableId &&
-				destination.index === source.index
-			) {
-				console.log("same");
-				return;
-			}
-
-			if (type === "column") {
-				if (source.index !== destination.index) {
-					const updatedColumns = Array.from(columns);
-					const movedColumn = updatedColumns[source.index];
-					updatedColumns.splice(source.index, 1);
-					updatedColumns.splice(destination.index, 0, movedColumn);
-					setColumns(updatedColumns);
-				}
-
-				return;
-			}
-
-			setColumns((prevColumns) => {
-				const removedTask = prevColumns.map((column) => {
-					if (column.taskId.includes(draggableId)) {
-						return {
-							...column,
-							taskId: column.taskId.filter(
-								(taskId) => taskId !== draggableId
-							),
-						};
-					}
-					return column;
-				});
-
-				const updatedColumns = removedTask.map((column) => {
-					if (column.name === destination.droppableId) {
-						const newTaskId = [...column.taskId];
-						newTaskId.splice(destination.index, 0, draggableId);
-
-						return {
-							...column,
-							taskId: newTaskId,
-						};
-					}
-					return column;
-				});
-
-				return updatedColumns;
-			});
-
-			setDragEndDetails(payload);
-		},
-		[columns]
-	);
-
-	const onItemMoveStart = useCallback(
-		(start: DragStart) => {
-			const { draggableId, source, type } = start;
-			const payload = {
-				type: type,
-				stopped: false,
-				draggableName: draggableId,
-				StartPosition: source.index,
-				startColumn: source.droppableId,
-			};
-
-			setDragStartDetails(payload);
-		},
-		[setDragStartDetails]
-	);
-
-	console.log(dragStartDetails);
-	console.log(dragEndDetails);
+export const KanbanBoard: React.FC<KanbanBoardType> = React.memo((props) => {
+	const { Tasks } = useTask();
+	const { onItemMoveStart, onItemMoveEnd, columns } = props;
+	
+	const renderCounter  = useRef(0);
+    renderCounter.current = renderCounter.current + 1;
+	
 	return (
 		<DragDropContext
 			onDragStart={onItemMoveStart}
@@ -117,23 +38,27 @@ export const KanbanBoard: React.FC = () => {
 						{...provided.droppableProps}
 						className=" flex justify-center bg-slate-300 rounded-lg p-4 space-x-4"
 					>
+						<p>render:{renderCounter.current}</p>
 						{columns.map((column, index) => (
 							<Column
 								key={column.id}
 								title={column.name}
-								tasks={column.taskId.map((taskId) =>
-									Tasks.find((task) => task.id === taskId)
-								)}
+								tasks={
+									column.taskId.map((taskId) =>
+										Tasks.find((task) => task.id === taskId)
+									) as TaskType[]
+								}
 								id={index}
 							/>
 						))}
 
 						{provided.placeholder}
 					</div>
+					
 				)}
 			</Droppable>
 		</DragDropContext>
 	);
-};
+});
 
 export default KanbanBoard;

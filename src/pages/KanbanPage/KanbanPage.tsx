@@ -1,8 +1,108 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import { KanbanBoard } from "../../components/KanbanBoard";
+import { DragStart, DropResult } from "react-beautiful-dnd";
+import { ColumnType } from "../../context/TaskContext/context";
+import useTask from "../../hooks/useTask";
 
 export const KanbanPage: React.FC = () => {
-	return <KanbanBoard />;
+	const { Columns } = useTask();
+	const [columns, setColumns] = useState<Array<ColumnType>>([...Columns]);
+
+	const [dragStartDetails, setDragStartDetails] = useState<any>(null);
+	const [dragEndDetails, setDragEndDetails] = useState<any>(null);
+
+	const onItemMoveEnd = useCallback(
+		(result: DropResult) => {
+			const { destination, source, draggableId, type } = result;
+			const payload = {
+				stopped: true,
+				destinationColumn: destination?.droppableId,
+				destinationPosition: destination?.index,
+			};
+
+			if (!destination) {
+				return;
+			}
+			if (
+				destination.droppableId === source.droppableId &&
+				destination.index === source.index
+			) {
+				console.log("same");
+				return;
+			}
+
+			if (type === "column") {
+				if (source.index !== destination.index) {
+					const updatedColumns = Array.from(columns);
+					const movedColumn = updatedColumns[source.index];
+					updatedColumns.splice(source.index, 1);
+					updatedColumns.splice(destination.index, 0, movedColumn);
+					setColumns(updatedColumns);
+				}
+
+				return;
+			}
+
+			setColumns((prevColumns) => {
+				const removedTask = prevColumns.map((column) => {
+					if (column.taskId.includes(draggableId)) {
+						return {
+							...column,
+							taskId: column.taskId.filter(
+								(taskId) => taskId !== draggableId
+							),
+						};
+					}
+					return column;
+				});
+
+				const updatedColumns = removedTask.map((column) => {
+					if (column.name === destination.droppableId) {
+						const newTaskId = [...column.taskId];
+						newTaskId.splice(destination.index, 0, draggableId);
+
+						return {
+							...column,
+							taskId: newTaskId,
+						};
+					}
+					return column;
+				});
+
+				return updatedColumns;
+			});
+
+			setDragEndDetails(payload);
+		},
+		[columns]
+	);
+
+	const onItemMoveStart = useCallback(
+		(start: DragStart) => {
+			const { draggableId, source, type } = start;
+			const payload = {
+				type: type,
+				stopped: false,
+				draggableName: draggableId,
+				StartPosition: source.index,
+				startColumn: source.droppableId,
+			};
+
+			setDragStartDetails(payload);
+		},
+		[setDragStartDetails]
+	);
+
+	console.log(dragStartDetails);
+	console.log(dragEndDetails);
+
+	return (
+		<KanbanBoard
+			onItemMoveStart={onItemMoveStart}
+			onItemMoveEnd={onItemMoveEnd}
+			columns={columns}
+		/>
+	);
 };
 
 export default KanbanPage;
