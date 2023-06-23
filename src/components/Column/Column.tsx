@@ -25,7 +25,6 @@ export const Column: React.FC<ColumnProps> = React.memo((props) => {
 					<p className="text-lg font-medium ">
 						{title} render:{renderCounter.current}
 					</p>
-					<p className="text-lg font-medium ">{title}</p>
 
 					<Droppable droppableId={title} type="item">
 						{(provided) => (

@@ -9,6 +9,8 @@ export const KanbanPage: React.FC = () => {
 	const { Columns } = useTask();
 	const [columns, setColumns] = useState<Array<ColumnType>>([...Columns]);
 
+	// Publish here an event type, subscribe in the provider that listens for this event type and update the state accordingly.
+	
 	const onItemMoveEnd = useCallback(
 		(result: DropResult) => {
 			const { destination, source, draggableId, type } = result;
